@@ -1,2 +1,7 @@
-package org.transferservice.client.dto;public class AccountStatus {
+package org.transferservice.client.dto;
+
+public enum AccountStatus {
+    ACTIVE,
+    CLOSED,
+    FROZEN
 }

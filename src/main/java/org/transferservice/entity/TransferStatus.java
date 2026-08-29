@@ -1,2 +1,9 @@
-package org.transferservice.entity;public class TransferStatus {
+package org.transferservice.entity;
+
+public enum TransferStatus {
+
+    PENDING,
+    COMPLETED,
+    FAILED,
+    REJECTED
 }

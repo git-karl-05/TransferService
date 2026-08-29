@@ -1,2 +1,7 @@
-package org.transferservice.exception;public class InvalidRequestException {
+package org.transferservice.exception;
+
+public class InvalidTransferRequestException extends RuntimeException{
+    public InvalidTransferRequestException(String message) {
+        super(message);
+    }
 }
