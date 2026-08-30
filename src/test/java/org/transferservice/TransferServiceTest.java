@@ -132,7 +132,7 @@ public class TransferServiceTest {
     }
 
     @Test
-    public void createTransfer_onNonActiveAccount_shouldThrowException() {
+    public void createTransfer_onNonActiveAccount_shouldThrow_InvalidTransferRequestException() {
 
         TransferRequest request = createTransferRequest();
 
@@ -164,6 +164,37 @@ public class TransferServiceTest {
                 .save(any());
     }
 
+    @Test
+    public void fraudClientEvaluateTransfer_returnsRejected_shouldThrow_InvalidTransferRequestException() {
+
+        TransferRequest request = createTransferRequest();
+
+        AccountResponse sourceAccount = createSourceAccount();
+
+        AccountResponse destinationAccount = createDestinationAccount();
+
+        FraudCheckResponse rejectedResponse = createFraudCheckResponse();
+        rejectedResponse.setDecision(FraudDecision.REJECTED);
+        rejectedResponse.setRiskLevel(FraudRiskLevel.HIGH);
+        rejectedResponse.setReason("Rejected");
+
+        when(accountClient.getAccountById(1L))
+                .thenReturn(sourceAccount);
+
+        when(accountClient.getAccountById(2L))
+                .thenReturn(destinationAccount);
+
+        when(
+                fraudClient.evaluateTransfer(
+                1L,
+                2L,
+                BigDecimal.valueOf(500)
+        ))
+                .thenReturn(rejectedResponse);
+
+        assertThrows(InvalidTransferRequestException.class, () -> transferService.createTransfer(request));
+    }
+
     private TransferRequest createTransferRequest() {
 
         TransferRequest request = new TransferRequest();
@@ -174,7 +205,6 @@ public class TransferServiceTest {
 
         return request;
     }
-
     private AccountResponse createSourceAccount() {
 
         AccountResponse sourceAccount = new AccountResponse();
@@ -188,7 +218,6 @@ public class TransferServiceTest {
 
         return  sourceAccount;
     }
-
     private AccountResponse createDestinationAccount() {
 
         AccountResponse destinationAccount = new AccountResponse();
@@ -202,7 +231,6 @@ public class TransferServiceTest {
 
         return destinationAccount;
     }
-
     private FraudCheckResponse createFraudCheckResponse() {
 
         FraudCheckResponse response = new FraudCheckResponse();
@@ -213,8 +241,6 @@ public class TransferServiceTest {
 
         return response;
     }
-
-
     private AccountResponse createDebitedAccount() {
 
         AccountResponse debitedAccount = new AccountResponse();
@@ -224,8 +250,6 @@ public class TransferServiceTest {
 
         return debitedAccount;
     }
-
-
     private AccountResponse createCreditedAccount() {
 
         AccountResponse creditedAccount = new AccountResponse();
@@ -235,7 +259,6 @@ public class TransferServiceTest {
 
         return creditedAccount;
     }
-
     private TransferEntity createSavedEntity() {
 
         TransferEntity entity = new TransferEntity();
