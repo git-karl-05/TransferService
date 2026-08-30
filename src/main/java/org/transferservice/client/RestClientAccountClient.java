@@ -1,14 +1,16 @@
 package org.transferservice.client;
 
 
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.transferservice.client.dto.AccountResponse;
 
 import java.math.BigDecimal;
 
+
 @Component
-public class RestClientAccountClient {
+public class RestClientAccountClient implements AccountClient{
 
     private final RestClient restClient;
 
@@ -23,19 +25,22 @@ public class RestClientAccountClient {
                 .body(AccountResponse.class);
     }
 
-    public void debitAccount(Long accountId, BigDecimal amount) {
-        restClient.post()
+    @Override
+    public AccountResponse debitAccount(Long accountId, BigDecimal amount) {
+        return restClient.post()
                 .uri("/api/accounts/{accountId}/debit", accountId)
                 .body(amount)
                 .retrieve()
-                .toBodilessEntity();
+                .body(AccountResponse.class);
+
     }
 
-    public void creditAccount(Long accountId, BigDecimal amount) {
-        restClient.post()
-                .uri("api/accounts/{accountId}", accountId)
+    @Override
+    public AccountResponse creditAccount(Long accountId, BigDecimal amount) {
+        return restClient.post()
+                .uri("api/accounts/{accountId}/credit", accountId)
                 .body(amount)
                 .retrieve()
-                .toBodilessEntity();
+                .body(AccountResponse.class);
     }
 }

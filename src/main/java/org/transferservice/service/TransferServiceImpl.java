@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.transferservice.client.AccountClient;
+import org.transferservice.client.RestClientAccountClient;
 import org.transferservice.client.dto.AccountResponse;
 import org.transferservice.client.dto.AccountStatus;
 import org.transferservice.dto.TransferRequest;
@@ -40,6 +41,10 @@ public class TransferServiceImpl implements TransferService{
             throw new InvalidTransferRequestException("Transfer request cannot be null");
         }
 
+        if (request.getFromAccountId() == null || request.getToAccountId() == null) {
+            throw new InvalidTransferRequestException("Source and destination account IDs are required");
+        }
+
         if (request.getAmount() == null ||
                 request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransferRequestException("Transfer amount must be greater than zero");
@@ -69,8 +74,16 @@ public class TransferServiceImpl implements TransferService{
             throw new InvalidTransferRequestException("Source account has insufficient funds");
         }
 
-
         log.info("Creating transfer from source account {} to destination account {}", request.getFromAccountId(), request.getToAccountId());
+
+        log.info("Debiting {} from account {}", request.getAmount(), request.getFromAccountId());
+        AccountResponse debitedAccount = accountClient.debitAccount(request.getFromAccountId(), request.getAmount());
+
+        log.info("Crediting {} to account {}", request.getAmount(), request.getToAccountId());
+        AccountResponse creditedAccount = accountClient.creditAccount(request.getToAccountId(), request.getAmount());
+
+
+
         TransferEntity entity = new TransferEntity();
 
         entity.setFromAccountId(request.getFromAccountId());
@@ -81,7 +94,13 @@ public class TransferServiceImpl implements TransferService{
 
         log.info("Saving transfer request");
         TransferEntity savedTransfer = transferRepository.save(entity);
-        return new TransferResponse(savedTransfer);
+        return new TransferResponse(
+                savedTransfer,
+                sourceAccount.getBalance(),
+                debitedAccount.getBalance(),
+                destinationAccount.getBalance(),
+                creditedAccount.getBalance()
+                );
     }
 
     @Override

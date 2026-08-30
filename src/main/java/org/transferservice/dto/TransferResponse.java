@@ -1,10 +1,23 @@
 package org.transferservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.transferservice.entity.TransferEntity;
 import org.transferservice.entity.TransferStatus;
 
 import java.math.BigDecimal;
 
+@JsonPropertyOrder({
+        "transferId",
+        "fromAccountId",
+        "toAccountId",
+        "amount",
+        "description",
+        "status",
+        "sourceStartingBalance",
+        "sourceEndingBalance",
+        "destinationStartingBalance",
+        "destinationEndingBalance"
+})
 public class TransferResponse {
 
     private Long transferId;
@@ -14,15 +27,56 @@ public class TransferResponse {
     private String description;
     private TransferStatus status;
 
+    private BigDecimal sourceStartingBalance;
+    private BigDecimal sourceEndingBalance;
+
+    private BigDecimal destinationStartingBalance;
+    private BigDecimal destinationEndingBalance;
+
     public TransferResponse() {}
 
-    public TransferResponse(TransferEntity transferEntity) {
-        this.transferId = transferEntity.getTransferId();
-        this.fromAccountId = transferEntity.getFromAccountId();
-        this.toAccountId = transferEntity.getToAccountId();
-        this.amount = transferEntity.getAmount();
-        this.description = transferEntity.getDescription();
-        this.status = transferEntity.getStatus();
+
+    public TransferResponse(Long transferId, Long fromAccountId, Long toAccountId, BigDecimal amount, TransferStatus status, BigDecimal sourceStartingBalance, BigDecimal sourceEndingBalance, BigDecimal destinationStartingBalance, BigDecimal destinationEndingBalance) {
+        this.transferId = transferId;
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
+        this.amount = amount;
+        this.status = status;
+        this.sourceStartingBalance = sourceStartingBalance;
+        this.sourceEndingBalance = sourceEndingBalance;
+        this.destinationStartingBalance = destinationStartingBalance;
+        this.destinationEndingBalance = destinationEndingBalance;
+    }
+
+    //napper
+
+    public TransferResponse(TransferEntity entity) {
+        this.fromAccountId = entity.getFromAccountId();
+        this.toAccountId = entity.getToAccountId();
+        this.amount = entity.getAmount();
+        this.description = entity.getDescription();
+        this.status = entity.getStatus();
+    }
+
+    public TransferResponse(
+            TransferEntity entity,
+            BigDecimal sourceStartingBalance,
+            BigDecimal sourceEndingBalance,
+            BigDecimal destinationStartingBalance,
+            BigDecimal destinationEndingBalance
+    ) {
+
+        this.transferId = entity.getTransferId();
+        this.fromAccountId = entity.getFromAccountId();
+        this.toAccountId = entity.getToAccountId();
+        this.amount = entity.getAmount();
+        this.description = entity.getDescription();
+        this.status = entity.getStatus();
+
+        this.sourceStartingBalance = sourceStartingBalance;
+        this.sourceEndingBalance = sourceEndingBalance;
+        this.destinationStartingBalance = destinationStartingBalance;
+        this.destinationEndingBalance = destinationEndingBalance;
     }
 
     public Long getTransferId() {
@@ -71,5 +125,37 @@ public class TransferResponse {
 
     public void setStatus(TransferStatus status) {
         this.status = status;
+    }
+
+    public BigDecimal getSourceStartingBalance() {
+        return sourceStartingBalance;
+    }
+
+    public void setSourceStartingBalance(BigDecimal sourceStartingBalance) {
+        this.sourceStartingBalance = sourceStartingBalance;
+    }
+
+    public BigDecimal getSourceEndingBalance() {
+        return sourceEndingBalance;
+    }
+
+    public void setSourceEndingBalance(BigDecimal sourceEndingBalance) {
+        this.sourceEndingBalance = sourceEndingBalance;
+    }
+
+    public BigDecimal getDestinationStartingBalance() {
+        return destinationStartingBalance;
+    }
+
+    public void setDestinationStartingBalance(BigDecimal destinationStartingBalance) {
+        this.destinationStartingBalance = destinationStartingBalance;
+    }
+
+    public BigDecimal getDestinationEndingBalance() {
+        return destinationEndingBalance;
+    }
+
+    public void setDestinationEndingBalance(BigDecimal destinationEndingBalance) {
+        this.destinationEndingBalance = destinationEndingBalance;
     }
 }

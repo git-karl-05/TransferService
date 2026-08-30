@@ -15,16 +15,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/transfers/**")
-                            .hasAnyRole("ADMIN", "USER")
-                        .anyRequest()
-                            .authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer -> {})
+                        .anyRequest().permitAll()
                 );
-
-
         return http.build();
     }
 }
