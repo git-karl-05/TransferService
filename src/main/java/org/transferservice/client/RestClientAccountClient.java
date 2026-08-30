@@ -1,6 +1,7 @@
 package org.transferservice.client;
 
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
@@ -14,7 +15,7 @@ public class RestClientAccountClient implements AccountClient{
 
     private final RestClient restClient;
 
-    public RestClientAccountClient(RestClient restClient) {
+    public RestClientAccountClient(@Qualifier("accountRestClient") RestClient restClient) {
         this.restClient = restClient;
     }
 

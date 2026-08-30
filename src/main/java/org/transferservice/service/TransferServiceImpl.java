@@ -4,9 +4,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.transferservice.client.AccountClient;
+import org.transferservice.client.FraudClient;
 import org.transferservice.client.RestClientAccountClient;
 import org.transferservice.client.dto.AccountResponse;
 import org.transferservice.client.dto.AccountStatus;
+import org.transferservice.client.dto.FraudCheckResponse;
+import org.transferservice.client.dto.FraudDecision;
 import org.transferservice.dto.TransferRequest;
 import org.transferservice.dto.TransferResponse;
 import org.transferservice.entity.TransferEntity;
@@ -28,10 +31,12 @@ public class TransferServiceImpl implements TransferService{
 
     private final TransferRepository transferRepository;
     private final AccountClient accountClient;
+    private final FraudClient fraudClient;
 
-    public TransferServiceImpl(TransferRepository transferRepository, AccountClient accountClient) {
+    public TransferServiceImpl(TransferRepository transferRepository, AccountClient accountClient, FraudClient fraudClient) {
         this.transferRepository = transferRepository;
         this.accountClient = accountClient;
+        this.fraudClient = fraudClient;
     }
 
     @Override
@@ -74,6 +79,27 @@ public class TransferServiceImpl implements TransferService{
             throw new InvalidTransferRequestException("Source account has insufficient funds");
         }
 
+        FraudCheckResponse fraudCheckResponse = fraudClient.evaluateTransfer(
+                request.getFromAccountId(),
+                request.getToAccountId(),
+                request.getAmount()
+        );
+
+        log.info(
+                "Running fraud check for transfer from account {} to account {} for amount ",
+                request.getFromAccountId(),
+                request.getToAccountId(),
+                request.getAmount()
+        );
+        if (FraudDecision.REJECTED.equals(fraudCheckResponse.getDecision())) {
+            throw new InvalidTransferRequestException("Transfer rejected by fraud screening");
+        }
+        log.info(
+                "Fraud check completed with decision {} and risk level {}",
+                fraudCheckResponse.getDecision(),
+                fraudCheckResponse.getRiskLevel()
+                );
+
         log.info("Creating transfer from source account {} to destination account {}", request.getFromAccountId(), request.getToAccountId());
 
         log.info("Debiting {} from account {}", request.getAmount(), request.getFromAccountId());
@@ -81,7 +107,6 @@ public class TransferServiceImpl implements TransferService{
 
         log.info("Crediting {} to account {}", request.getAmount(), request.getToAccountId());
         AccountResponse creditedAccount = accountClient.creditAccount(request.getToAccountId(), request.getAmount());
-
 
 
         TransferEntity entity = new TransferEntity();
