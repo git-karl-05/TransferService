@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.bind.annotation.RestController;
 import org.transferservice.client.AccountClient;
 import org.transferservice.client.FraudClient;
 import org.transferservice.client.dto.*;
@@ -15,6 +16,7 @@ import org.transferservice.entity.TransferEntity;
 import org.transferservice.entity.TransferStatus;
 import org.transferservice.exception.InvalidTransferRequestException;
 import org.transferservice.repository.TransferRepository;
+import org.transferservice.service.TransferService;
 import org.transferservice.service.TransferServiceImpl;
 
 import java.math.BigDecimal;
@@ -193,6 +195,50 @@ public class TransferServiceTest {
                 .thenReturn(rejectedResponse);
 
         assertThrows(InvalidTransferRequestException.class, () -> transferService.createTransfer(request));
+
+        verify(accountClient, never())
+                .debitAccount(anyLong(), any());
+
+        verify(accountClient, never())
+                .creditAccount(anyLong(), any());
+
+        verify(transferRepository, never())
+                .save(any());
+
+
+    }
+
+
+    @Test
+    public void createTransfer_withInsufficientFunds_shouldThrow_invalidTransferRequestException() {
+
+        TransferRequest request = createTransferRequest();
+
+        AccountResponse sourceAccount = createSourceAccount();
+        sourceAccount.setBalance(BigDecimal.ZERO);
+
+        AccountResponse destinationAccount = createDestinationAccount();
+
+
+        when(accountClient.getAccountById(1L))
+                .thenReturn(sourceAccount);
+
+        when(accountClient.getAccountById(2L))
+                .thenReturn(destinationAccount);
+
+        assertThrows(InvalidTransferRequestException.class, () -> transferService.createTransfer(request));
+
+        verify(fraudClient, never())
+                .evaluateTransfer(anyLong(), anyLong(), any());
+
+        verify(accountClient, never())
+                .debitAccount(anyLong(), any());
+
+        verify(accountClient, never())
+                .creditAccount(anyLong(), any());
+
+        verify(transferRepository, never())
+                .save(any());
     }
 
     private TransferRequest createTransferRequest() {
