@@ -5,11 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.transferservice.client.AccountClient;
 import org.transferservice.client.FraudClient;
-import org.transferservice.client.RestClientAccountClient;
-import org.transferservice.client.dto.AccountResponse;
-import org.transferservice.client.dto.AccountStatus;
-import org.transferservice.client.dto.FraudCheckResponse;
-import org.transferservice.client.dto.FraudDecision;
+import org.transferservice.client.dto.*;
 import org.transferservice.dto.TransferRequest;
 import org.transferservice.dto.TransferResponse;
 import org.transferservice.entity.TransferEntity;
@@ -42,42 +38,12 @@ public class TransferServiceImpl implements TransferService{
     @Override
     public TransferResponse createTransfer(TransferRequest request) {
 
-        if (request == null) {
-            throw new InvalidTransferRequestException("Transfer request cannot be null");
-        }
-
-        if (request.getFromAccountId() == null || request.getToAccountId() == null) {
-            throw new InvalidTransferRequestException("Source and destination account IDs are required");
-        }
-
-        if (request.getAmount() == null ||
-                request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidTransferRequestException("Transfer amount must be greater than zero");
-        }
-
-        if (Objects.equals(request.getFromAccountId(), request.getToAccountId())) {
-            throw new InvalidTransferRequestException("Source and Destination accounts must be different");
-        }
-
-        if (request.getAmount().compareTo(TRANSFER_LIMIT) > 0) {
-            throw new InvalidTransferRequestException("Transfer amount cannot exceed $10,000");
-        }
+        validateRequest(request);
 
         AccountResponse sourceAccount = accountClient.getAccountById(request.getFromAccountId());
         AccountResponse destinationAccount = accountClient.getAccountById(request.getToAccountId());
 
-        if (!AccountStatus.ACTIVE.equals(sourceAccount.getAccountStatus())) {
-            throw new InvalidTransferRequestException("Source account must be active");
-        }
-
-        if (!AccountStatus.ACTIVE.equals(destinationAccount.getAccountStatus())) {
-            throw new InvalidTransferRequestException("Destination account must be active");
-        }
-
-        if (sourceAccount.getBalance()
-                .compareTo(request.getAmount()) < 0) {
-            throw new InvalidTransferRequestException("Source account has insufficient funds");
-        }
+        validateAccount(sourceAccount, destinationAccount, request);
 
         FraudCheckResponse fraudCheckResponse = fraudClient.evaluateTransfer(
                 request.getFromAccountId(),
@@ -142,6 +108,44 @@ public class TransferServiceImpl implements TransferService{
                 .map(TransferResponse::new)
                 .toList();
 
+    }
+
+    private void validateRequest(TransferRequest request) {
+        if (request == null) {
+            throw new InvalidTransferRequestException("Transfer request cannot be null");
+        }
+
+        if (request.getFromAccountId() == null || request.getToAccountId() == null) {
+            throw new InvalidTransferRequestException("Source and destination account IDs are required");
+        }
+
+        if (request.getAmount() == null ||
+                request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidTransferRequestException("Transfer amount must be greater than zero");
+        }
+
+        if (Objects.equals(request.getFromAccountId(), request.getToAccountId())) {
+            throw new InvalidTransferRequestException("Source and Destination accounts must be different");
+        }
+
+        if (request.getAmount().compareTo(TRANSFER_LIMIT) > 0) {
+            throw new InvalidTransferRequestException("Transfer amount cannot exceed $10,000");
+        }
+    }
+
+    private void validateAccount(AccountResponse sourceAccount, AccountResponse destinationAccount, TransferRequest request) {
+        if (!AccountStatus.ACTIVE.equals(sourceAccount.getAccountStatus())) {
+            throw new InvalidTransferRequestException("Source account must be active");
+        }
+
+        if (!AccountStatus.ACTIVE.equals(destinationAccount.getAccountStatus())) {
+            throw new InvalidTransferRequestException("Destination account must be active");
+        }
+
+        if (sourceAccount.getBalance()
+                .compareTo(request.getAmount()) < 0) {
+            throw new InvalidTransferRequestException("Source account has insufficient funds");
+        }
     }
 
     private TransferEntity getTransferEntity(Long id) {

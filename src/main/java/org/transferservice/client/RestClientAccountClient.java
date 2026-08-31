@@ -1,6 +1,7 @@
 package org.transferservice.client;
 
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.resilience.annotation.Retryable;
@@ -17,9 +18,11 @@ import java.math.BigDecimal;
 public class RestClientAccountClient implements AccountClient{
 
     private final RestClient restClient;
+    private final CircuitBreaker circuitBreaker;
 
-    public RestClientAccountClient(@Qualifier("accountRestClient") RestClient restClient) {
+    public RestClientAccountClient(@Qualifier("accountRestClient") RestClient restClient, CircuitBreaker circuitBreaker) {
         this.restClient = restClient;
+        this.circuitBreaker = circuitBreaker;
     }
 
     @Retryable(
@@ -32,9 +35,9 @@ public class RestClientAccountClient implements AccountClient{
         System.out.println("Calling Account Service for account: " + accountId);
 
         return restClient.get()
-                .uri("/api/accounts/{accountId}", accountId)
-                .retrieve()
-                .body(AccountResponse.class);
+                        .uri("/api/accounts/{accountId}", accountId)
+                        .retrieve()
+                        .body(AccountResponse.class);
     }
 
     @Override

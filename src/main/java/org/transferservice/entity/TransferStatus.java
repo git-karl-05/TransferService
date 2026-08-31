@@ -5,5 +5,5 @@ public enum TransferStatus {
     PENDING,
     COMPLETED,
     FAILED,
-    REJECTED
+    COMPENSATED
 }
