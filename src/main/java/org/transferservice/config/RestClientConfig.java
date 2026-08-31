@@ -16,8 +16,8 @@ public class RestClientConfig {
 
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
-        requestFactory.setReadTimeout(Duration.ofSeconds(2));
         requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(2));
 
         return RestClient.builder()
                 .baseUrl("http://localhost:8082")
@@ -27,8 +27,15 @@ public class RestClientConfig {
 
     @Bean
     public RestClient fraudRestClient() {
+
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+
+        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
+        requestFactory.setReadTimeout(Duration.ofSeconds(2));
+
         return RestClient.builder()
                 .baseUrl("http://localhost:8083")
+                .requestFactory(requestFactory)
                 .build();
     }
 }

@@ -9,8 +9,12 @@ Content-Type: application/json
   "description": "Test transfer"
 }
 
-### Get transfer by ID
-GET http://localhost:8081/api/transfers/1
+#### Get transfer by ID
+#GET http://localhost:8081/api/transfers/1
+#
+#### Get all transfers
+#GET http://localhost:8081/api/transfers
 
-### Get all transfers
-GET http://localhost:8081/api/transfers
+
+### Get transfer by ID
+GET http://localhost:8082/api/accounts/1
