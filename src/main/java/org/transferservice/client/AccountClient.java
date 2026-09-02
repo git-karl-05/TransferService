@@ -9,7 +9,7 @@ public interface AccountClient {
 
     AccountResponse getAccountById(Long accountId);
 
-    AccountResponse debitAccount(Long accountId, BigDecimal amount);
+    AccountResponse debitAccount(Long accountId, String operationId, BigDecimal amount);
 
-    AccountResponse creditAccount(Long accountId, BigDecimal amount);
+    AccountResponse creditAccount(Long accountId, String operationId, BigDecimal amount);
 }

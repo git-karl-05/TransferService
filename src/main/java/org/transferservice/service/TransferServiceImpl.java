@@ -35,6 +35,7 @@ public class TransferServiceImpl implements TransferService{
         this.fraudClient = fraudClient;
     }
 
+
     @Override
     public TransferResponse createTransfer(TransferRequest request) {
 
@@ -45,35 +46,17 @@ public class TransferServiceImpl implements TransferService{
 
         validateAccount(sourceAccount, destinationAccount, request);
 
-        FraudCheckResponse fraudCheckResponse = fraudClient.evaluateTransfer(
-                request.getFromAccountId(),
-                request.getToAccountId(),
-                request.getAmount()
-        );
+        FraudCheckResponse response = fraudClient.evaluateTransfer(request.getFromAccountId(), request.getToAccountId(), request.getAmount());
 
-        log.info(
-                "Running fraud check for transfer from account {} to account {} for amount ",
-                request.getFromAccountId(),
-                request.getToAccountId(),
-                request.getAmount()
-        );
-        if (FraudDecision.REJECTED.equals(fraudCheckResponse.getDecision())) {
-            throw new InvalidTransferRequestException("Transfer rejected by fraud screening");
-        }
         log.info(
                 "Fraud check completed with decision {} and risk level {}",
-                fraudCheckResponse.getDecision(),
-                fraudCheckResponse.getRiskLevel()
-                );
+                response.getDecision(),
+                response.getRiskLevel()
+        );
 
-        log.info("Creating transfer from source account {} to destination account {}", request.getFromAccountId(), request.getToAccountId());
-
-        log.info("Debiting {} from account {}", request.getAmount(), request.getFromAccountId());
-        AccountResponse debitedAccount = accountClient.debitAccount(request.getFromAccountId(), request.getAmount());
-
-        log.info("Crediting {} to account {}", request.getAmount(), request.getToAccountId());
-        AccountResponse creditedAccount = accountClient.creditAccount(request.getToAccountId(), request.getAmount());
-
+        if (Objects.equals(response.getDecision(), FraudDecision.REJECTED)) {
+            throw new InvalidTransferRequestException("Transfer denied due to fraud risk");
+        }
 
         TransferEntity entity = new TransferEntity();
 
@@ -81,17 +64,71 @@ public class TransferServiceImpl implements TransferService{
         entity.setToAccountId(request.getToAccountId());
         entity.setAmount(request.getAmount());
         entity.setDescription(request.getDescription());
-        entity.setStatus(TransferStatus.COMPLETED);
+        entity.setStatus(TransferStatus.PENDING);
 
-        log.info("Saving transfer request");
-        TransferEntity savedTransfer = transferRepository.save(entity);
+        TransferEntity pendingTransfer = transferRepository.save(entity);
+
+        String debitOperationId = "TRANSFER-" + pendingTransfer.getTransferId() +"-DEBIT";
+        String creditOperationId = "TRANSFER-" + pendingTransfer.getTransferId() +"-CREDIT";
+        String compensationOperationId = "TRANSFER-" + pendingTransfer.getTransferId() +"-COMPENSATION";
+
+        AccountResponse debitedAccount;
+        AccountResponse creditedAccount;
+
+        try {
+
+            log.info("Processing debit amount: {} from source account: {}", request.getAmount(), request.getFromAccountId());
+            debitedAccount = accountClient.debitAccount(request.getFromAccountId(), debitOperationId, request.getAmount());
+
+        } catch (RuntimeException exception) {
+
+            pendingTransfer.setStatus(TransferStatus.FAILED);
+            transferRepository.save(pendingTransfer);
+            log.warn("Processing debit amount failed");
+
+            throw exception;
+
+        }
+
+        try {
+
+            log.info("Processing credit amount: {} to destination account: {}", request.getAmount(), request.getToAccountId());
+            creditedAccount = accountClient.creditAccount(request.getToAccountId(), creditOperationId, request.getAmount());
+
+        } catch (RuntimeException exception) {
+
+            try {
+
+                log.warn("Credit failed. Compensating source account");
+                accountClient.creditAccount(request.getFromAccountId(), compensationOperationId, request.getAmount());
+
+                pendingTransfer.setStatus(TransferStatus.COMPENSATED);
+                transferRepository.save(pendingTransfer);
+
+            } catch (RuntimeException compensationException) {
+
+                pendingTransfer.setStatus(TransferStatus.COMPENSATION_FAILED);
+                transferRepository.save(pendingTransfer);
+
+                throw compensationException;
+            }
+
+            throw exception;
+
+        }
+
+        log.info("Transfer has been completed successfully");
+
+        pendingTransfer.setStatus(TransferStatus.COMPLETED);
+        TransferEntity completedTransfer = transferRepository.save(pendingTransfer);
+
         return new TransferResponse(
-                savedTransfer,
+                completedTransfer,
                 sourceAccount.getBalance(),
                 debitedAccount.getBalance(),
                 destinationAccount.getBalance(),
                 creditedAccount.getBalance()
-                );
+        );
     }
 
     @Override

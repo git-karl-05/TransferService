@@ -10,6 +10,8 @@ import org.transferservice.dto.TransferResponse;
 import org.transferservice.service.TransferService;
 import org.transferservice.service.TransferServiceImpl;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/transfers")
@@ -32,5 +34,10 @@ public class TransferController {
     public ResponseEntity<TransferResponse> createTransfer(@Valid @RequestBody TransferRequest request) {
         TransferResponse response = transferService.createTransfer(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping()
+    public ResponseEntity<List<TransferResponse>> getAllTransfers() {
+        return ResponseEntity.ok(transferService.getAllTransfers());
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.transferservice.client.dto.AccountResponse;
+import org.transferservice.client.dto.AccountTransactionRequest;
 import org.transferservice.config.RetryConfig;
 
 import java.math.BigDecimal;
@@ -41,20 +42,36 @@ public class RestClientAccountClient implements AccountClient{
     }
 
     @Override
-    public AccountResponse debitAccount(Long accountId, BigDecimal amount) {
+    public AccountResponse debitAccount(
+            Long accountId,
+            String operationId,
+            BigDecimal amount) {
+
+        AccountTransactionRequest request = new AccountTransactionRequest();
+        request.setOperationId(operationId);
+        request.setAmount(amount);
+
         return restClient.post()
                 .uri("/api/accounts/{accountId}/debit", accountId)
-                .body(amount)
+                .body(request)
                 .retrieve()
                 .body(AccountResponse.class);
 
     }
 
     @Override
-    public AccountResponse creditAccount(Long accountId, BigDecimal amount) {
+    public AccountResponse creditAccount(
+            Long accountId,
+            String operationId,
+            BigDecimal amount) {
+
+        AccountTransactionRequest request = new AccountTransactionRequest();
+        request.setOperationId(operationId);
+        request.setAmount(amount);
+
         return restClient.post()
                 .uri("/api/accounts/{accountId}/credit", accountId)
-                .body(amount)
+                .body(request)
                 .retrieve()
                 .body(AccountResponse.class);
     }
