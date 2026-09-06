@@ -1,0 +1,16 @@
+### Create transfer
+POST http://localhost:8081/api/transfers
+Content-Type: application/json
+
+{
+  "fromAccountId": 1,
+  "toAccountId": 2,
+  "amount": 500.00,
+  "description": "Docker Compose test"
+}
+
+#### Get transfer by ID
+GET http://localhost:8081/api/transfers/1
+
+### Get all transfers
+GET http://localhost:8081/api/transfers

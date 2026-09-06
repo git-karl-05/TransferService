@@ -39,17 +39,20 @@ public class TransferServiceImpl implements TransferService{
     @Override
     public TransferResponse createTransfer(TransferRequest request) {
 
+        log.info("Performing request validation");
         validateRequest(request);
 
         AccountResponse sourceAccount = accountClient.getAccountById(request.getFromAccountId());
         AccountResponse destinationAccount = accountClient.getAccountById(request.getToAccountId());
 
+        log.info("Performing account validation");
         validateAccount(sourceAccount, destinationAccount, request);
 
+        log.info("Performing fraud check");
         FraudCheckResponse response = fraudClient.evaluateTransfer(request.getFromAccountId(), request.getToAccountId(), request.getAmount());
 
         log.info(
-                "Fraud check completed with decision {} and risk level {}",
+                "Fraud check completed with decision: {} and risk level: {}",
                 response.getDecision(),
                 response.getRiskLevel()
         );

@@ -2,15 +2,15 @@ package org.transferservice.client;
 
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Primary;
 import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.transferservice.client.dto.AccountResponse;
 import org.transferservice.client.dto.AccountTransactionRequest;
-import org.transferservice.config.RetryConfig;
 
 import java.math.BigDecimal;
 
@@ -20,6 +20,7 @@ public class RestClientAccountClient implements AccountClient{
 
     private final RestClient restClient;
     private final CircuitBreaker circuitBreaker;
+    private final Logger log = LoggerFactory.getLogger(RestClientAccountClient.class);
 
     public RestClientAccountClient(@Qualifier("accountRestClient") RestClient restClient, CircuitBreaker circuitBreaker) {
         this.restClient = restClient;
@@ -33,7 +34,7 @@ public class RestClientAccountClient implements AccountClient{
     )
     public AccountResponse getAccountById(Long accountId) {
 
-        System.out.println("Calling Account Service for account: " + accountId);
+        log.info("Calling Account Service for account ID: " + accountId);
 
         return restClient.get()
                         .uri("/api/accounts/{accountId}", accountId)

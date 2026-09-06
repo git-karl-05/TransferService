@@ -1,5 +1,6 @@
 package org.transferservice.entity;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
@@ -12,8 +13,13 @@ public class TransferEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transferId;
 
+    @Column(nullable = false)
     private Long fromAccountId;
+    @Column(nullable = false)
     private Long toAccountId;
+    @Column(nullable = false)
+    private String idempotencyKey;
+    @Column(nullable = false)
     private BigDecimal amount;
     private String description;
 
