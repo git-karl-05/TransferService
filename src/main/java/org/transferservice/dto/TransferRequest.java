@@ -1,6 +1,7 @@
 package org.transferservice.dto;
 
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
@@ -13,6 +14,9 @@ public class TransferRequest {
 
     @NotNull(message = "Destination account ID is required")
     private Long toAccountId;
+
+    @NotBlank
+    private String idempotencyKey;
 
     @NotNull(message = "Transfer amount is required")
     @Positive(message = "Transfer amount must be greater than zero")
@@ -53,5 +57,13 @@ public class TransferRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public @NotBlank String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(@NotBlank String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }

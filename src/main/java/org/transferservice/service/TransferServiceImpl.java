@@ -17,6 +17,7 @@ import org.transferservice.repository.TransferRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
 @Service
@@ -39,6 +40,13 @@ public class TransferServiceImpl implements TransferService{
     public TransferResponse createTransfer(TransferRequest request) {
 
         validateRequest(request);
+
+        Optional<TransferEntity> existingTransfer = transferRepository.findByIdempotencyKey(request.getIdempotencyKey());
+
+        if (existingTransfer.isEmpty()) {
+            log.info("Transfer request already exists for idempotency key {}", request.getIdempotencyKey());
+            return new TransferResponse(existingTransfer.get());
+        }
 
         AccountResponse sourceAccount = accountClient.getAccountById(request.getFromAccountId());
         AccountResponse destinationAccount = accountClient.getAccountById(request.getToAccountId());
@@ -77,6 +85,7 @@ public class TransferServiceImpl implements TransferService{
 
         TransferEntity entity = new TransferEntity();
 
+        entity.setIdempotencyKey(request.getIdempotencyKey());
         entity.setFromAccountId(request.getFromAccountId());
         entity.setToAccountId(request.getToAccountId());
         entity.setAmount(request.getAmount());
@@ -111,6 +120,11 @@ public class TransferServiceImpl implements TransferService{
     }
 
     private void validateRequest(TransferRequest request) {
+
+        if (request.getIdempotencyKey() == null || request.getIdempotencyKey().isBlank()) {
+            throw new InvalidTransferRequestException("Idempotency Key is required");
+        }
+
         if (request == null) {
             throw new InvalidTransferRequestException("Transfer request cannot be null");
         }

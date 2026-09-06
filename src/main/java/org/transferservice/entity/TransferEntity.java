@@ -12,8 +12,13 @@ public class TransferEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transferId;
 
+    @Column(nullable = false)
     private Long fromAccountId;
+    @Column(nullable = false)
     private Long toAccountId;
+    @Column(nullable = false, unique = true)
+    private String idempotencyKey;
+    @Column(nullable = false)
     private BigDecimal amount;
     private String description;
 
@@ -76,5 +81,13 @@ public class TransferEntity {
 
     public void setStatus(TransferStatus status) {
         this.status = status;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }
