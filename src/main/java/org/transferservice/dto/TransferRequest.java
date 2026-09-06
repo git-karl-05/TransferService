@@ -15,7 +15,6 @@ public class TransferRequest {
     @NotNull(message = "Destination account ID is required")
     private Long toAccountId;
 
-    @NotBlank
     private String idempotencyKey;
 
     @NotNull(message = "Transfer amount is required")
@@ -57,5 +56,13 @@ public class TransferRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public @NotBlank String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(@NotBlank String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 }

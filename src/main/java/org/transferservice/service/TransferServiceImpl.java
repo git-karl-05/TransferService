@@ -17,6 +17,7 @@ import org.transferservice.repository.TransferRepository;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 
 @Service
@@ -42,6 +43,14 @@ public class TransferServiceImpl implements TransferService{
         log.info("Performing request validation");
         validateRequest(request);
 
+        Optional<TransferEntity> existingTransfer = transferRepository.findByIdempotencyKey(request.getIdempotencyKey());
+
+        if (existingTransfer.isPresent()) {
+            log.info("Transfer request already exists for idempotency key {}", request.getIdempotencyKey());
+            return new TransferResponse(existingTransfer.get());
+        }
+
+
         AccountResponse sourceAccount = accountClient.getAccountById(request.getFromAccountId());
         AccountResponse destinationAccount = accountClient.getAccountById(request.getToAccountId());
 
@@ -63,6 +72,7 @@ public class TransferServiceImpl implements TransferService{
 
         TransferEntity entity = new TransferEntity();
 
+        entity.setIdempotencyKey(request.getIdempotencyKey());
         entity.setFromAccountId(request.getFromAccountId());
         entity.setToAccountId(request.getToAccountId());
         entity.setAmount(request.getAmount());
@@ -123,21 +133,20 @@ public class TransferServiceImpl implements TransferService{
         log.info("Transfer has been completed successfully");
 
         pendingTransfer.setStatus(TransferStatus.COMPLETED);
+        pendingTransfer.setSourceStartingBalance(sourceAccount.getBalance());
+        pendingTransfer.setSourceEndingBalance(debitedAccount.getBalance());
+        pendingTransfer.setDestinationStartingBalance(destinationAccount.getBalance());
+        pendingTransfer.setDestinationEndingBalance(creditedAccount.getBalance());
         TransferEntity completedTransfer = transferRepository.save(pendingTransfer);
 
-        return new TransferResponse(
-                completedTransfer,
-                sourceAccount.getBalance(),
-                debitedAccount.getBalance(),
-                destinationAccount.getBalance(),
-                creditedAccount.getBalance()
-        );
+        return new TransferResponse(completedTransfer);
     }
 
     @Override
     public TransferResponse getTransferById(Long transferId) {
         TransferEntity entity = getTransferEntity(transferId);
 
+        log.info("Source Account: {}, Destionation Account: {}, Amount: {}", entity.getFromAccountId(), entity.getToAccountId(), entity.getAmount());
         return new TransferResponse(entity);
     }
 
@@ -163,7 +172,6 @@ public class TransferServiceImpl implements TransferService{
                 request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidTransferRequestException("Transfer amount must be greater than zero");
         }
-
         if (Objects.equals(request.getFromAccountId(), request.getToAccountId())) {
             throw new InvalidTransferRequestException("Source and Destination accounts must be different");
         }

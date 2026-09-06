@@ -26,6 +26,11 @@ public class TransferEntity {
     @Enumerated(EnumType.STRING)
     private TransferStatus status;
 
+    private BigDecimal sourceStartingBalance;
+    private BigDecimal sourceEndingBalance;
+    private BigDecimal destinationStartingBalance;
+    private BigDecimal destinationEndingBalance;
+
     public TransferEntity() {}
 
     public TransferEntity(Long fromAccountId, Long toAccountId, BigDecimal amount, String description, TransferStatus status) {
@@ -34,6 +39,19 @@ public class TransferEntity {
         this.amount = amount;
         this.description = description;
         this.status = status;
+    }
+
+    public TransferEntity(Long fromAccountId, Long toAccountId, String idempotencyKey, BigDecimal amount, String description, TransferStatus status, BigDecimal sourceStartingBalance, BigDecimal sourceEndingBalance, BigDecimal destinationStartingBalance, BigDecimal destinationEndingBalance) {
+        this.fromAccountId = fromAccountId;
+        this.toAccountId = toAccountId;
+        this.idempotencyKey = idempotencyKey;
+        this.amount = amount;
+        this.description = description;
+        this.status = status;
+        this.sourceStartingBalance = sourceStartingBalance;
+        this.sourceEndingBalance = sourceEndingBalance;
+        this.destinationStartingBalance = destinationStartingBalance;
+        this.destinationEndingBalance = destinationEndingBalance;
     }
 
     public Long getTransferId() {
@@ -82,5 +100,45 @@ public class TransferEntity {
 
     public void setStatus(TransferStatus status) {
         this.status = status;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
+    }
+
+    public BigDecimal getSourceStartingBalance() {
+        return sourceStartingBalance;
+    }
+
+    public void setSourceStartingBalance(BigDecimal sourceStartingBalance) {
+        this.sourceStartingBalance = sourceStartingBalance;
+    }
+
+    public BigDecimal getSourceEndingBalance() {
+        return sourceEndingBalance;
+    }
+
+    public void setSourceEndingBalance(BigDecimal sourceEndingBalance) {
+        this.sourceEndingBalance = sourceEndingBalance;
+    }
+
+    public BigDecimal getDestinationStartingBalance() {
+        return destinationStartingBalance;
+    }
+
+    public void setDestinationStartingBalance(BigDecimal destinationStartingBalance) {
+        this.destinationStartingBalance = destinationStartingBalance;
+    }
+
+    public BigDecimal getDestinationEndingBalance() {
+        return destinationEndingBalance;
+    }
+
+    public void setDestinationEndingBalance(BigDecimal destinationEndingBalance) {
+        this.destinationEndingBalance = destinationEndingBalance;
     }
 }

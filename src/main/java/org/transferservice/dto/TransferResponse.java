@@ -33,7 +33,7 @@ public class TransferResponse {
     private BigDecimal destinationStartingBalance;
     private BigDecimal destinationEndingBalance;
 
-    public TransferResponse() {}
+    public TransferResponse(){}
 
 
     public TransferResponse(Long transferId, Long fromAccountId, Long toAccountId, BigDecimal amount, TransferStatus status, BigDecimal sourceStartingBalance, BigDecimal sourceEndingBalance, BigDecimal destinationStartingBalance, BigDecimal destinationEndingBalance) {
@@ -48,22 +48,10 @@ public class TransferResponse {
         this.destinationEndingBalance = destinationEndingBalance;
     }
 
-    //napper
 
-    public TransferResponse(TransferEntity entity) {
-        this.fromAccountId = entity.getFromAccountId();
-        this.toAccountId = entity.getToAccountId();
-        this.amount = entity.getAmount();
-        this.description = entity.getDescription();
-        this.status = entity.getStatus();
-    }
 
     public TransferResponse(
-            TransferEntity entity,
-            BigDecimal sourceStartingBalance,
-            BigDecimal sourceEndingBalance,
-            BigDecimal destinationStartingBalance,
-            BigDecimal destinationEndingBalance
+            TransferEntity entity
     ) {
 
         this.transferId = entity.getTransferId();
@@ -73,11 +61,12 @@ public class TransferResponse {
         this.description = entity.getDescription();
         this.status = entity.getStatus();
 
-        this.sourceStartingBalance = sourceStartingBalance;
-        this.sourceEndingBalance = sourceEndingBalance;
-        this.destinationStartingBalance = destinationStartingBalance;
-        this.destinationEndingBalance = destinationEndingBalance;
+        this.sourceStartingBalance = entity.getSourceStartingBalance();
+        this.sourceEndingBalance = entity.getSourceEndingBalance();
+        this.destinationStartingBalance = entity.getDestinationStartingBalance();
+        this.destinationEndingBalance = entity.getDestinationEndingBalance();
     }
+
 
     public Long getTransferId() {
         return transferId;
@@ -158,4 +147,5 @@ public class TransferResponse {
     public void setDestinationEndingBalance(BigDecimal destinationEndingBalance) {
         this.destinationEndingBalance = destinationEndingBalance;
     }
+
 }

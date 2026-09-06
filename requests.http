@@ -3,10 +3,11 @@ POST http://localhost:8081/api/transfers
 Content-Type: application/json
 
 {
-  "fromAccountId": 1,
-  "toAccountId": 2,
-  "amount": 500.00,
-  "description": "Docker Compose test"
+  "idempotencyKey": "idempotency-test-2",
+  "fromAccountId": 100,
+  "toAccountId": 200,
+  "amount": 100.00,
+  "description": "Idempotency test"
 }
 
 #### Get transfer by ID
