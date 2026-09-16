@@ -3,11 +3,11 @@ POST http://localhost:8081/api/transfers
 Content-Type: application/json
 
 {
-  "idempotencyKey": "idempotency-test-2",
-  "fromAccountId": 100,
-  "toAccountId": 200,
-  "amount": 100.00,
-  "description": "Idempotency test"
+  "idempotencyKey": "K8S-TEST-001",
+  "fromAccountId": 1,
+  "toAccountId": 2,
+  "amount": 500.00,
+  "description": "Kubernetes test"
 }
 
 #### Get transfer by ID

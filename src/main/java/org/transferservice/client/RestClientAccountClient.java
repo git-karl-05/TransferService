@@ -36,10 +36,17 @@ public class RestClientAccountClient implements AccountClient{
 
         log.info("Calling Account Service for account ID: " + accountId);
 
-        return restClient.get()
-                        .uri("/api/accounts/{accountId}", accountId)
-                        .retrieve()
-                        .body(AccountResponse.class);
+        try {
+            return restClient.get()
+                    .uri("/api/accounts/{accountId}", accountId)
+                    .retrieve()
+                    .body(AccountResponse.class);
+        } catch (Exception e) {
+            log.error("Account Service request failed for account: {}", accountId, e);
+            throw e;
+
+        }
+
     }
 
     @Override
@@ -76,4 +83,5 @@ public class RestClientAccountClient implements AccountClient{
                 .retrieve()
                 .body(AccountResponse.class);
     }
+
 }
